@@ -6,7 +6,9 @@ import org.cloudbus.cloudsim.Cloudlet;
 import org.cloudbus.cloudsim.Vm;
 
 /**  
-*@Description:     
+*@Description:  
+* 使用遗传算法计算最优的任务分配策略，
+* 然后根据遗传算法结果，进行实际任务分配。
 */ 
 
 public class GA2 extends GeneticAlgorithm{
@@ -14,15 +16,19 @@ public class GA2 extends GeneticAlgorithm{
 	private static List<Vm> vmList;//虚拟机列表
 	
 	public GA2(List<Cloudlet> cL, List<Vm>vL) {
-		super(cL.size()); 
+		super(cL.size()); //调用父方法，设置基因长度。
+		
+		//获取任务列表和虚拟机列表
 		GA2.cloudletList = cL;
 		GA2.vmList = vL;
 	}
 	
-	@Override
-	public double changeX(Chromosome chro) {//计算得分
+	// 计算染色体得分。
+	// 输入一个染色体
+	// 返回该染色体译码得到的分配策略，在分配策略下，任务的最迟完成时间。
+	public double changeX(Chromosome chro) {
 		int[] gene = chro.getNum();
-		double x;
+		double x_completeTime;//储存染色体最迟完成时间。
 		double tempx[] = new double[] {0.0, 0.0, 0.0, 0.0, 0.0};
 		for(int i=0; i<gene.length; i++) {
 			switch(gene[i]) {
@@ -49,13 +55,13 @@ public class GA2 extends GeneticAlgorithm{
 				default:break;
 			}
 		}
-		x = tempx[0];
-		for(int i=0; i<5; i++) {
-			if(x < tempx[i]) {
-				x = tempx[i];
+		x_completeTime = tempx[0];
+		for(int i=1; i<5; i++) {
+			if(x_completeTime < tempx[i]) {
+				x_completeTime = tempx[i];
 			}
 		}
-		return x;
+		return (1/x_completeTime);//注意，返回的时任务最迟完成时间的倒数。
 	}
 
 	@Override
@@ -63,5 +69,4 @@ public class GA2 extends GeneticAlgorithm{
 		// TODO Auto-generated method stub  
 		return x;
 	}
-
 }

@@ -40,8 +40,9 @@ import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.RamProvisionerSimple;
 
 /**
- * A simple example showing how to create a datacenter with one host and run one
- * cloudlet on it.
+ * MinMin算法：采用先易后难和贪心策略，
+ * 每次选取完成时间“最短”的任务，再执行完成时间长的任务，
+ * 并采取贪心策略把每个任务优先指派给执行它最早完成的计算资源。
  */
 public class MyAllocationMinMin {
 
@@ -52,7 +53,7 @@ public class MyAllocationMinMin {
 	private static List<Vm> vmlist;
 	
 	/** 设置全局变量，云任务数量和虚拟机数量*/
-	private static int cloudletNum = 1000;//云任务数量
+	private static int cloudletNum = 40;//云任务数量
 	private static int vmNum = 5;//虚拟机数量
 
 	/**
@@ -121,28 +122,30 @@ public class MyAllocationMinMin {
 
 			// Cloudlet properties（任务列表）
 			int id = 0;
-//			long[] length = new long[] {
-//					19365, 49809, 30218, 44157, 16754, 26785,12348, 28894, 33889, 58967,
-//					35045, 12236, 20085, 31123, 32227, 41727, 51017, 44787, 65854, 39836,
-//					18336, 20047, 31493, 30727, 31017, 30218, 44157, 16754, 26785, 12348,
-//					49809, 30218, 44157, 16754, 26785, 44157, 16754, 26785, 12348, 28894};//云任务指令数
-//			long[] fileSize = new long[] {
-//					30000, 50000, 10000, 40000, 20000, 41000, 27000, 43000, 36000, 33000,
-//					23000, 22000, 41000, 42000, 24000, 23000, 36000, 42000, 46000, 33000,
-//					23000, 22000, 41000, 42000, 50000, 10000, 40000, 20000, 41000, 10000,
-//					40000, 20000, 41000, 27000, 30000, 50000, 10000, 40000, 20000, 17000};//云任务文件大小
-			long[] length = new long[cloudletNum];
-			long[] fileSize = new long[cloudletNum]; 
-			Random random = new Random();
-			random.setSeed(10000L);
-			for(int i = 0 ; i < cloudletNum ; i ++) {
-				length[i] = random.nextInt(4000) + 1000;
-	        }
-			random.setSeed(5000L);
-			for(int i = 0 ; i < cloudletNum ; i ++) {
-				fileSize[i] = random.nextInt(20000) + 10000;
-	        }
+			long[] length = new long[] {
+					19365, 49809, 30218, 44157, 16754, 26785,12348, 28894, 33889, 58967,
+					35045, 12236, 20085, 31123, 32227, 41727, 51017, 44787, 65854, 39836,
+					18336, 20047, 31493, 30727, 31017, 30218, 44157, 16754, 26785, 12348,
+					49809, 30218, 44157, 16754, 26785, 44157, 16754, 26785, 12348, 28894};//云任务指令数
+			long[] fileSize = new long[] {
+					30000, 50000, 10000, 40000, 20000, 41000, 27000, 43000, 36000, 33000,
+					23000, 22000, 41000, 42000, 24000, 23000, 36000, 42000, 46000, 33000,
+					23000, 22000, 41000, 42000, 50000, 10000, 40000, 20000, 41000, 10000,
+					40000, 20000, 41000, 27000, 30000, 50000, 10000, 40000, 20000, 17000};//云任务文件大小
 			
+			// 使用随机的方法生成指令长度和文件数据长度。
+//			long[] length = new long[cloudletNum];
+//			long[] fileSize = new long[cloudletNum]; 
+//			Random random = new Random();
+//			random.setSeed(10000L);//设置种子，让每次运行产生的随机数相同
+//			for(int i = 0 ; i < cloudletNum ; i ++) {
+//				length[i] = random.nextInt(4000) + 1000;
+//	        }
+//			random.setSeed(5000L);//设置种子，让每次运行产生的随机数相同
+//			for(int i = 0 ; i < cloudletNum ; i ++) {
+//				fileSize[i] = random.nextInt(20000) + 10000;
+//	        }
+//			
 			long outputSize = 300;
 			UtilizationModel utilizationModel = new UtilizationModelFull();
 			
@@ -157,7 +160,7 @@ public class MyAllocationMinMin {
 			// submit cloudlet list to the broker.（当任务提交给代理商）
 			broker.submitCloudletList(cloudletList);
 			
-			//使用贪心算法分配任务
+			//使用MinMin+贪心算法分配任务
 			bindCloudletsToVmsTimeAwared();
 					
 			// Sixth step: Starts the simulation
@@ -337,8 +340,8 @@ public class MyAllocationMinMin {
 	}
 	
 
-	//贪心算法
-	//Cloudlet根据MI降序排列,MinMin算法
+	//Min-Min+贪心算法
+	//Cloudlet根据MI升序排列, MinMin算法
 	public static void bindCloudletsToVmsTimeAwared(){
         int cloudletNum=cloudletList.size();
         int vmNum=vmlist.size();
@@ -346,7 +349,7 @@ public class MyAllocationMinMin {
         //time[i][j] 表示任务i在虚拟机j上的执行时间
         double[][] time=new double[cloudletNum][vmNum];
         
-        //cloudletList按MI降序排列, vm按MIPS升序排列
+        //cloudletList按MI升序排列, vm按MIPS升序排列
         Collections.sort(cloudletList,new MyAllocationMinMin().new CloudletComparator());
         Collections.sort(vmlist,new MyAllocationMinMin().new VmComparator());
         
@@ -380,7 +383,7 @@ public class MyAllocationMinMin {
        double minLoad=0;//记录当前任务分配方式的最优值
        int idx=0;//记录当前任务最优分配方式对应的虚拟机列号
        
-       //第一个cloudlet分配给最快的vm
+       //第一个cloudlet（最短的任务）先分配给最快的vm
        vmLoad[vmNum-1]=time[0][vmNum-1];
        vmTasks[vmNum-1]=1;
        cloudletList.get(0).setVmId(vmlist.get(vmNum-1).getId());
@@ -392,18 +395,19 @@ public class MyAllocationMinMin {
     	   
     	   //对于每个虚拟机，如果任务加到虚拟机上，所有的任务执行时间最短，则将该任务分配给该虚拟机
     	   for(int j=vmNum-2;j>=0;j--){
-    		   //如果当前虚拟机未分配任务,则比较完当前任务分配给该虚拟机是否最优
+    		   //如果当前虚拟机未分配任务,则比较完当前任务分配给该虚拟机是否最优。
     		   if(vmLoad[j]==0){
     			   if(minLoad>=time[i][j]) {
     				   idx = j;
     			   }
     			   break;
     		   }
+    		   //如果将该任务分配到该虚拟机上，总执行时间最短，则将该任务分配该该虚拟机。
     		   if(minLoad>vmLoad[j]+time[i][j]){
     			   minLoad=vmLoad[j]+time[i][j];
     			   idx=j;
     		   }
-    		   //简单的负载均衡
+    		   //如果分配到该虚拟机，总的执行时间相同，则将任务分配给任务数量较少的虚拟机。
     		   else if(minLoad==vmLoad[j]+time[i][j]&&vmTasks[j]<vmTasks[idx]) {
     			   idx = j;
     		   }
@@ -416,11 +420,11 @@ public class MyAllocationMinMin {
        }
 	}
 	
-	//Cloudlet根据length降序排列
+	//Cloudlet根据length升序排列
 	private class CloudletComparator implements Comparator<Cloudlet>{
         @Override
         public int compare(Cloudlet cl1, Cloudlet cl2){
-            return (int)(cl2.getCloudletLength()-cl1.getCloudletLength());
+            return (int)(cl1.getCloudletLength()-cl2.getCloudletLength());
         }
     }
     

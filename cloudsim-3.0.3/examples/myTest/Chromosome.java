@@ -34,13 +34,13 @@ public class Chromosome {
 		Random random = new Random();
 		for (int i = 0; i < size; i++) {
 			
-			//gene[i] = (int) (Math.random()*10) % 5;
+			//gene[i] = (int) (Math.random()*10) ;
 			gene[i] = random.nextInt(5);
 		}
 	}
 	
 	/**
-	 * 生成一个新基因
+	 * 生成一个新基因（默认方法）
 	 */
 	public Chromosome() {
 		
@@ -48,8 +48,6 @@ public class Chromosome {
 	
 	/**
 	 * @param c
-	 * @return
-	 * @Author:lulei  
 	 * @Description: 克隆基因
 	 */
 	public static Chromosome clone(final Chromosome c) {
@@ -66,7 +64,6 @@ public class Chromosome {
 	
 	/**
 	 * @param size
-	 * @Author:lulei  
 	 * @Description: 初始化基因长度
 	 */
 	private void initGeneSize(int size) {
@@ -80,7 +77,6 @@ public class Chromosome {
 	/**
 	 * @param c1
 	 * @param c2
-	 * @Author:lulei  
 	 * @Description: 遗传产生下一代
 	 */
 	public static List<Chromosome> genetic(Chromosome p1, Chromosome p2) {
@@ -95,18 +91,22 @@ public class Chromosome {
 		}
 		Chromosome c1 = clone(p1);
 		Chromosome c2 = clone(p2);
+		
 		//随机产生交叉互换位置
 		int size = c1.gene.length;
 		int a = ((int) (Math.random() * size)) % size;
 		int b = ((int) (Math.random() * size)) % size;
 		int min = a > b ? b : a;
 		int max = a > b ? a : b;
+		
 		//对位置上的基因进行交叉互换
 		for (int i = min; i <= max; i++) {
 			int t = c1.gene[i];
 			c1.gene[i] = c2.gene[i];
 			c2.gene[i] = t;
 		}
+		
+		//返回交叉变换后的子代。
 		List<Chromosome> list = new ArrayList<Chromosome>();
 		list.add(c1);
 		list.add(c2);
@@ -115,7 +115,6 @@ public class Chromosome {
 	
 	/**
 	 * @param num
-	 * @Author:lulei  
 	 * @Description: 基因num个位置发生变异
 	 */
 	public void mutation(int num) {
@@ -133,9 +132,8 @@ public class Chromosome {
 	}
 	
 	/**
-	 * @return
-	 * @Author:lulei  
-	 * @Description: 将基因转化为对应的数字
+	 * @return 
+	 * @Description: 将基因转化为对应的数字，在本次实例中，返回染色体数组。
 	 */
 	public int[] getNum() {
 		return gene;

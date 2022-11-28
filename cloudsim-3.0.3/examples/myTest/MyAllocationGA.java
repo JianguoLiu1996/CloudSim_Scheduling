@@ -38,7 +38,8 @@ import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.RamProvisionerSimple;
 
 /**
- * 使用DatacenterBroker中的默认调度算法执行，即使用循环调度算法执行任务调度
+ * 使用遗传算法计算最优的任务分配策略，
+ * 然后根据遗传算法结果，进行实际任务分配。
  */
 public class MyAllocationGA {
 	/** The cloudlet list. */
@@ -47,8 +48,8 @@ public class MyAllocationGA {
 	/** The vmlist. */
 	private static List<Vm> vmlist;
 	
-	/** 设置全局变量，云任务数量和虚拟机数量*/
-	private static int cloudletNum = 1000;//云任务数量
+	// 设置全局变量，云任务数量和虚拟机数量。
+	private static int cloudletNum = 40;//云任务数量
 	private static int vmNum = 5;//虚拟机数量
 
 	/**
@@ -64,31 +65,31 @@ public class MyAllocationGA {
 		try {
 			// First step: Initialize the CloudSim package. It should be called
 			// before creating any entities.
-			//第一步，即，初始化
+			// 第一步，即，初始化。
 			int num_user = 1; // number of cloud users
 			Calendar calendar = Calendar.getInstance();//日历
 			boolean trace_flag = false; // mean trace events
 
 			// Initialize the CloudSim library
-			//初始化CloudSim库
+			// 初始化CloudSim库。
 			CloudSim.init(num_user, calendar, trace_flag);
 
 			
 			// Second step: Create Datacenters
 			// Datacenters are the resource providers in CloudSim. We need at
 			// list one of them to run a CloudSim simulation
-			//第二步，创建数据中心
+			// 第二步，创建数据中心。
 			Datacenter datacenter0 = createDatacenter("Datacenter_0");
 
 			
 			// Third step: Create Broker
-			//第三步，创建代理
+			// 第三步，创建代理。
 			DatacenterBroker broker = createBroker();
 			int brokerId = broker.getId();
 
 			
 			// Fourth step: Create five virtual machine
-			//第四步，创建5个虚拟机
+			// 第四步，创建5个虚拟机。
 			vmlist = new ArrayList<Vm>();
 
 			// VM description（虚拟机参数）
@@ -112,32 +113,33 @@ public class MyAllocationGA {
 
 			
 			// Fifth step: Create one Cloudlet
-			//第五步，创建40个任务
+			// 第五步，创建40个任务
 			cloudletList = new ArrayList<Cloudlet>();
 
 			// Cloudlet properties（任务列表）
 			int id = 0;
-//			long[] length = new long[] {
-//					19365, 49809, 30218, 44157, 16754, 26785,12348, 28894, 33889, 58967,
-//					35045, 12236, 20085, 31123, 32227, 41727, 51017, 44787, 65854, 39836,
-//					18336, 20047, 31493, 30727, 31017, 30218, 44157, 16754, 26785, 12348,
-//					49809, 30218, 44157, 16754, 26785, 44157, 16754, 26785, 12348, 28894};//云任务指令数
-//			long[] fileSize = new long[] {
-//					30000, 50000, 10000, 40000, 20000, 41000, 27000, 43000, 36000, 33000,
-//					23000, 22000, 41000, 42000, 24000, 23000, 36000, 42000, 46000, 33000,
-//					23000, 22000, 41000, 42000, 50000, 10000, 40000, 20000, 41000, 10000,
-//					40000, 20000, 41000, 27000, 30000, 50000, 10000, 40000, 20000, 17000};//云任务文件大小
-			long[] length = new long[cloudletNum];
-			long[] fileSize = new long[cloudletNum]; 
-			Random random = new Random();
-			random.setSeed(10000L);
-			for(int i = 0 ; i < cloudletNum ; i ++) {
-				length[i] = random.nextInt(4000) + 1000;
-	        }
-			random.setSeed(5000L);
-			for(int i = 0 ; i < cloudletNum ; i ++) {
-				fileSize[i] = random.nextInt(20000) + 10000;
-	        }
+			long[] length = new long[] {
+					19365, 49809, 30218, 44157, 16754, 26785,12348, 28894, 33889, 58967,
+					35045, 12236, 20085, 31123, 32227, 41727, 51017, 44787, 65854, 39836,
+					18336, 20047, 31493, 30727, 31017, 30218, 44157, 16754, 26785, 12348,
+					49809, 30218, 44157, 16754, 26785, 44157, 16754, 26785, 12348, 28894};//云任务指令数
+			long[] fileSize = new long[] {
+					30000, 50000, 10000, 40000, 20000, 41000, 27000, 43000, 36000, 33000,
+					23000, 22000, 41000, 42000, 24000, 23000, 36000, 42000, 46000, 33000,
+					23000, 22000, 41000, 42000, 50000, 10000, 40000, 20000, 41000, 10000,
+					40000, 20000, 41000, 27000, 30000, 50000, 10000, 40000, 20000, 17000};//云任务文件大小
+			// 使用随机的方法生成指令长度和文件数据长度。
+//			long[] length = new long[cloudletNum];
+//			long[] fileSize = new long[cloudletNum]; 
+//			Random random = new Random();
+//			random.setSeed(10000L);//设置种子，让每次运行产生的随机数相同
+//			for(int i = 0 ; i < cloudletNum ; i ++) {
+//				length[i] = random.nextInt(4000) + 1000;
+//	        }
+//			random.setSeed(5000L);//设置种子，让每次运行产生的随机数相同
+//			for(int i = 0 ; i < cloudletNum ; i ++) {
+//				fileSize[i] = random.nextInt(20000) + 10000;
+//	        }
 			
 			long outputSize = 300;
 			UtilizationModel utilizationModel = new UtilizationModelFull();
@@ -150,10 +152,10 @@ public class MyAllocationGA {
 				id++;
 			}
 					
-			// submit cloudlet list to the broker.（当任务提交给代理商）
+			// submit cloudlet list to the broker.（将任务提交给代理商）
 			broker.submitCloudletList(cloudletList);
 			
-			//GA操作，使用遗传算法计算结果进行分配任务
+			// GA操作，使用遗传算法计算结果进行任务分配。
 			GA2 test = new GA2(cloudletList,vmlist);
 			int[] resultGene = test.caculte();
 			for(int i=0; i<cloudletList.size(); i++) {

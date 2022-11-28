@@ -39,8 +39,9 @@ import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.RamProvisionerSimple;
 
 /**
- * A simple example showing how to create a datacenter with one host and run one
- * cloudlet on it.
+ * MaxMin算法：采用先难后易和贪心策略，
+ * 每次选取完成时间“最长”的任务，再执行完成时间短的任务，
+ * 并采取贪心策略把每个任务优先指派给执行它最早完成的计算资源。
  */
 public class MyAllocationMaxMin {
 
@@ -50,8 +51,8 @@ public class MyAllocationMaxMin {
 	/** The vmlist. */
 	private static List<Vm> vmlist;
 	
-	/** 设置全局变量，云任务数量和虚拟机数量*/
-	private static int cloudletNum = 1000;//云任务数量
+	// 设置全局变量，云任务数量和虚拟机数量。
+	private static int cloudletNum = 40;//云任务数量
 	private static int vmNum = 5;//虚拟机数量
 
 	/**
@@ -67,31 +68,31 @@ public class MyAllocationMaxMin {
 		try {
 			// First step: Initialize the CloudSim package. It should be called
 			// before creating any entities.
-			//第一步，即，初始化
+			// 第一步，即，初始化。
 			int num_user = 1; // number of cloud users
 			Calendar calendar = Calendar.getInstance();//日历
 			boolean trace_flag = false; // mean trace events
 
 			// Initialize the CloudSim library
-			//初始化CloudSim库
+			// 初始化CloudSim库。
 			CloudSim.init(num_user, calendar, trace_flag);
 
 			
 			// Second step: Create Datacenters
 			// Datacenters are the resource providers in CloudSim. We need at
 			// list one of them to run a CloudSim simulation
-			//第二步，创建数据中心
+			// 第二步，创建数据中心。
 			Datacenter datacenter0 = createDatacenter("Datacenter_0");
 
 			
 			// Third step: Create Broker
-			//第三步，创建代理
+			// 第三步，创建代理。
 			DatacenterBroker broker = createBroker();
 			int brokerId = broker.getId();
 
 			
 			// Fourth step: Create five virtual machine
-			//第四步，创建5个虚拟机
+			// 第四步，创建5个虚拟机。
 			vmlist = new ArrayList<Vm>();
 
 			// VM description（虚拟机参数）
@@ -115,32 +116,33 @@ public class MyAllocationMaxMin {
 
 			
 			// Fifth step: Create one Cloudlet
-			//第五步，创建40个任务
+			// 第五步，创建40个任务
 			cloudletList = new ArrayList<Cloudlet>();
 
 			// Cloudlet properties（任务列表）
 			int id = 0;
-//			long[] length = new long[] {
-//					19365, 49809, 30218, 44157, 16754, 26785,12348, 28894, 33889, 58967,
-//					35045, 12236, 20085, 31123, 32227, 41727, 51017, 44787, 65854, 39836,
-//					18336, 20047, 31493, 30727, 31017, 30218, 44157, 16754, 26785, 12348,
-//					49809, 30218, 44157, 16754, 26785, 44157, 16754, 26785, 12348, 28894};//云任务指令数
-//			long[] fileSize = new long[] {
-//					30000, 50000, 10000, 40000, 20000, 41000, 27000, 43000, 36000, 33000,
-//					23000, 22000, 41000, 42000, 24000, 23000, 36000, 42000, 46000, 33000,
-//					23000, 22000, 41000, 42000, 50000, 10000, 40000, 20000, 41000, 10000,
-//					40000, 20000, 41000, 27000, 30000, 50000, 10000, 40000, 20000, 17000};//云任务文件大小
-			long[] length = new long[cloudletNum];
-			long[] fileSize = new long[cloudletNum]; 
-			Random random = new Random();
-			random.setSeed(10000L);
-			for(int i = 0 ; i < cloudletNum ; i ++) {
-				length[i] = random.nextInt(4000) + 1000;
-	        }
-			random.setSeed(5000L);
-			for(int i = 0 ; i < cloudletNum ; i ++) {
-				fileSize[i] = random.nextInt(20000) + 10000;
-	        }
+			long[] length = new long[] {
+					19365, 49809, 30218, 44157, 16754, 26785,12348, 28894, 33889, 58967,
+					35045, 12236, 20085, 31123, 32227, 41727, 51017, 44787, 65854, 39836,
+					18336, 20047, 31493, 30727, 31017, 30218, 44157, 16754, 26785, 12348,
+					49809, 30218, 44157, 16754, 26785, 44157, 16754, 26785, 12348, 28894};//云任务指令数
+			long[] fileSize = new long[] {
+					30000, 50000, 10000, 40000, 20000, 41000, 27000, 43000, 36000, 33000,
+					23000, 22000, 41000, 42000, 24000, 23000, 36000, 42000, 46000, 33000,
+					23000, 22000, 41000, 42000, 50000, 10000, 40000, 20000, 41000, 10000,
+					40000, 20000, 41000, 27000, 30000, 50000, 10000, 40000, 20000, 17000};//云任务文件大小
+//			// 使用随机的方法生成指令长度和文件数据长度。
+//			long[] length = new long[cloudletNum];
+//			long[] fileSize = new long[cloudletNum]; 
+//			Random random = new Random();
+//			random.setSeed(10000L);//设置种子，让每次运行产生的随机数相同
+//			for(int i = 0 ; i < cloudletNum ; i ++) {
+//				length[i] = random.nextInt(4000) + 1000;
+//	        }
+//			random.setSeed(5000L);//设置种子，让每次运行产生的随机数相同
+//			for(int i = 0 ; i < cloudletNum ; i ++) {
+//				fileSize[i] = random.nextInt(20000) + 10000;
+//	        }
 			
 			long outputSize = 300;
 			UtilizationModel utilizationModel = new UtilizationModelFull();
@@ -156,7 +158,7 @@ public class MyAllocationMaxMin {
 			// submit cloudlet list to the broker.（当任务提交给代理商）
 			broker.submitCloudletList(cloudletList);
 			
-			//使用贪心算法分配任务
+			//使用MaxMin+贪心算法分配任务
 			bindCloudletsToVmsTimeAwared();
 					
 			// Sixth step: Starts the simulation
@@ -336,7 +338,7 @@ public class MyAllocationMaxMin {
 	}
 	
 
-	//贪心算法
+	//Max-Min+贪心算法
 	//Cloudlet根据MI降序排列,MaxMin算法
 	public static void bindCloudletsToVmsTimeAwared(){
         int cloudletNum=cloudletList.size();
@@ -345,7 +347,7 @@ public class MyAllocationMaxMin {
         //time[i][j] 表示任务i在虚拟机j上的执行时间
         double[][] time=new double[cloudletNum][vmNum];
         
-        //cloudletList按MI升序排列, vm按MIPS升序排列
+        //第一步，cloudletList按MI降序排列, vm按MIPS升序排列
         Collections.sort(cloudletList,new MyAllocationMaxMin().new CloudletComparator());
         Collections.sort(vmlist,new MyAllocationMaxMin().new VmComparator());
         
@@ -362,7 +364,7 @@ public class MyAllocationMaxMin {
         System. out .println();
         System. out .println("//////////////////////////////////");
         
-        //计算time[i][j]，即：计算任务i在虚拟机j上执行时间
+        //第二步，计算time[i][j]，即：计算任务i在虚拟机j上执行时间
        for (int i=0;i<cloudletNum;i++){
     	   for(int j=0;j<vmNum;j++){
     		   time[i][j]= (double)cloudletList.get(i).getCloudletLength()/vmlist.get(j).getMips();
@@ -378,7 +380,7 @@ public class MyAllocationMaxMin {
        double minLoad=0;//记录当前任务分配方式的最优值
        int idx=0;//记录当前任务最优分配方式对应的虚拟机列号
        
-       //第一个cloudlet分配给最快的vm
+       //第三步，第一个cloudlet（最长的任务）优先分配给最快的vm
        vmLoad[vmNum-1]=time[0][vmNum-1];
        vmTasks[vmNum-1]=1;
        cloudletList.get(0).setVmId(vmlist.get(vmNum-1).getId());
@@ -418,7 +420,7 @@ public class MyAllocationMaxMin {
 	private class CloudletComparator implements Comparator<Cloudlet>{
         @Override
         public int compare(Cloudlet cl1, Cloudlet cl2){
-            return (int)(cl1.getCloudletLength()-cl2.getCloudletLength());
+            return (int)(cl2.getCloudletLength()-cl1.getCloudletLength());
         }
     }
     
